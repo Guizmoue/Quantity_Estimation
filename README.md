@@ -24,4 +24,5 @@ python3 main.py -src "French" -tgt "English (US)" -ipt "Bonsoir, quelle belle jo
 ```
 
 ### Output
-
+[Score](./Output/score.txt)
+[Traduction](./Output/translate.txt)
