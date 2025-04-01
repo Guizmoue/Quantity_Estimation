@@ -1,4 +1,4 @@
-# Quantity Estimation
+# Translate and Quality Estimation
 
 **Membres :** NGAUV Nicolas, SCHLOSSER Guilhem, THEZENAS Anissa
 
