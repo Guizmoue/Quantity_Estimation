@@ -95,17 +95,5 @@ Design sobre et efficace :
 4. Logo et icônes : Icônes simples pour guider l’utilisateur (ex. bouton de traduction, téléchargement JSON).
 
 ### Conception de l'application
-🛠 Architecture générale
-/Projet_FastAPI
-│── main.py  # API FastAPI
-│── static/
-│   ├── script.js  # Fonctions AJAX
-│   ├── style.css  # Styles de l'interface
-│── templates/
-│   ├── index.html  # Interface utilisateur
-│── lang_tags.json  # Liste des langues disponibles
-│── history.json  # Historique des traductions
-│── requirements.txt  # Dépendances Python
-
-
+![Architecture](Architecture_Generale.png)
 
