@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Traduction Automatique</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <h1>Outil de Traduction & Évaluation</h1>
+
+    <label for="source-lang">Langue source :</label>
+    <select id="source-lang"></select>
+
+    <label for="target-lang">Langue cible :</label>
+    <select id="target-lang"></select>
+
+    <textarea id="input-text" placeholder="Entrez votre texte ici..."></textarea>
+    <button onclick="translateText()">Traduire</button>
+
+    <h3>Traduction :</h3>
+    <p id="translated-text"></p>
+
+    <h3>Score de qualité :</h3>
+    <p id="translation-score"></p>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
