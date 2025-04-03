@@ -20,7 +20,7 @@ Fichier utilisable en ligne de commande. Prend en entrée la langue source, la l
 
 **Exemple: **  
 ```  
-python3 main.py -src "French" -tgt "English (US)" -ipt "Bonsoir, quelle belle journée n'est ce pas ?"
+python3 translate.py -src "French" -tgt "English (US)" -ipt "Bonsoir, quelle belle journée n'est ce pas ?"
 ```
 
 ### Output

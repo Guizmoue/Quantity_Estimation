@@ -3,9 +3,10 @@ from happytransformer import HappyTextToText, TTSettings
 from collections import defaultdict
 from curl_cffi import requests
 from bs4 import BeautifulSoup as soup
-import argparse
 import torch
 from transquest.algo.sentence_level.siamesetransquest.run_model import SiameseTransQuestModel
+from utils import translate, score, save
+import argparse
 import json
 import os
 import time
@@ -24,38 +25,9 @@ end_m = time.perf_counter()
 timer_m = end_m - start_m
 print(f"Model loaded : {timer_m:.6f} secondes")
 
-
 # Chargement des tags de langue
 with open("lang_tags.json", "r", encoding="utf-8") as f:
     lang_tags = json.load(f)
-
-#__________FUNCTIONS
-
-def translate(model, input_txt: str):
-    """
-    Traduit un texte donné en utilisant HappyTextToText.
-    """
-    start_t = time.perf_counter()
-    settings = TTSettings(do_sample=True, top_k=50, temperature=0.7)
-    happy_tt = HappyTextToText("MARIAN", model)
-    output_txt = happy_tt.generate_text(input_txt, args=settings).text
-    end_t = time.perf_counter()
-    timer_t = end_t - start_t
-    
-    return output_txt, timer_t
-
-def score(input_txt: str, output_txt: str):
-    """
-    Évalue la qualité de la traduction en prédisant un score de Quantity Estimation.
-    """
-    return model_QE.predict([[input_txt, output_txt]])
-
-def save(path, content):
-    """
-    Sauvegarde un contenu textuel dans un fichier.
-    """
-    with open(path, "w", encoding="utf8") as file:
-        file.write(str(content))
 
 def main():
     """
@@ -70,7 +42,7 @@ def main():
     # Stocke les valeurs analysées dans l'objet my_args.
     args = parser.parse_args()
 
-    # 
+    # Initialiser les variables
     source = lang_tags[args.source]
     target = lang_tags[args.target]
     input_txt = args.input
@@ -80,12 +52,12 @@ def main():
     output_txt, timer_t = translate(model_LANG, input_txt)
     print(f"source : {input_txt}\ncible : {output_txt}")
     print(f"Translated in : {timer_t:.6f} secondes")
-    save("../Output/translate.txt", output_txt)
+    save("./Output/translate.txt", output_txt)
 
     print("\n----- SCORING -----")
     score_QE = score(input_txt, output_txt)
     print(f"{float(score_QE)=}")
-    save("../Output/score.txt", score_QE)
+    save("./Output/score.txt", score_QE)
 
 
 #__________MAIN
