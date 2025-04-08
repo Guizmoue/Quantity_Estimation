@@ -5,8 +5,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel
 from typing import Literal, Optional
-# from uuid import uuid4
-# from fastapi.encoders import jsonable_encoder
+from fastapi.middleware.cors import CORSMiddleware
 import os
 import json
 
@@ -17,18 +16,7 @@ from bs4 import BeautifulSoup as soup
 import torch
 from transquest.algo.sentence_level.siamesetransquest.run_model import SiameseTransQuestModel
 
-from utils import translate, score
-
-#__________MODELS
-MODEL_DATABASE = {
-    "Marian-NMT": "Helsinki-NLP/opus-mt"
-}
-
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1" # Désactive l'utilisation du GPU
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-model_QE = SiameseTransQuestModel("TransQuest/siamesetransquest-da-multilingual")
-model_QE.model.to(device)  # Transfert sur GPU si dispo
+from utils import LANG_DATABASE, MODEL_DATABASE, module_marian, module_google, module_deepl
 
 #__________MODELS
 app = FastAPI() # Création d'une instance FastAPI pour gérer l'application
@@ -47,15 +35,12 @@ if os.path.exists(LANG_DATABASE_FILE):
     with open(LANG_DATABASE_FILE, "r", encoding="utf8") as f:
         LANG_DATABASE = json.load(f)
 
-# print(LANG_DATABASE)
-
-
 #__________INDEX
 
 # Dans la page d'acceuil index.html instancier la variable "langues" qui correspond au contenu du fichier lang_tags.json
 @app.get("/")
 async def root(request: Request):
-    context = {"request": request, "langues": LANG_DATABASE}
+    context = {"request": request,  "models": MODEL_DATABASE, "languages": LANG_DATABASE}
     return templates.TemplateResponse("index.html", context)
 
 # Dans la page d'acceuil index.html récupérer les valeurs du formulaire faire la traduction et renvoyer le texte et le score dans la page
@@ -68,18 +53,18 @@ async def get_parameters(
     text_src: str = Form(...)
     ):
 
-    model = f"{MODEL_DATABASE[model]}-{LANG_DATABASE[lang_src]}-{LANG_DATABASE[lang_tgt]}"
     print(f"{model=}")
+    print(f"{lang_src=}, {lang_tgt=}")
     print(f"{text_src=}")
 
-    text_tgt, timer_t = translate(model, text_src)
-    print(f"{text_tgt=}")
-    
-    score_QE = score(model_QE, text_src, text_tgt)
-    score_QE = int(round(float(score_QE), 2) * 100)
-    print(f"{score_QE=}")
+    if model == "Deepl":
+        text_tgt, score_QE = module_deepl(model, lang_src, lang_tgt, text_src)
+    elif model == "Google Translate":
+        text_tgt, score_QE = module_google(model, lang_src, lang_tgt, text_src)
+    elif model == "Marian-NMT":
+        text_tgt, score_QE = module_marian(model, lang_src, lang_tgt, text_src)
 
-    context = {"request": request, "langues": LANG_DATABASE, "text_tgt": text_tgt, "score": int(score_QE)}
+    context = {"request": request, "models": MODEL_DATABASE, "model_selected": model, "languages": LANG_DATABASE, "lang_src": lang_src, "lang_tgt": lang_tgt, "text_src": text_src, "text_tgt": text_tgt, "score": int(score_QE)}
     return templates.TemplateResponse("index.html", context)
 
 

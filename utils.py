@@ -1,14 +1,39 @@
 from happytransformer import HappyTextToText, TTSettings
-from collections import defaultdict
-from curl_cffi import requests
-from bs4 import BeautifulSoup as soup
-import torch
 from transquest.algo.sentence_level.siamesetransquest.run_model import SiameseTransQuestModel
+from deep_translator import GoogleTranslator
+import deepl
+
+import torch
 import time
+import json
+import config
+import os
+
+#__________LANGUAGE_MODEL
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1" # Désactive l'utilisation du GPU
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+model_QE = SiameseTransQuestModel("TransQuest/siamesetransquest-da-multilingual")
+model_QE.model.to(device)  # Transfert sur GPU si disponible
+
+#__________MODELS
+MODEL_DATABASE = {
+    "Deepl": "deepl",
+    "Google Translate": "google-translate",
+    "Marian-NMT": "Helsinki-NLP/opus-mt"
+}
+
+#__________LANGS
+# Chargement des langues depuis un fichier JSON
+LANG_DATABASE_FILE = "lang_tags.json"
+
+if os.path.exists(LANG_DATABASE_FILE):
+    with open(LANG_DATABASE_FILE, "r", encoding="utf8") as f:
+        LANG_DATABASE = json.load(f)
 
 #__________FUNCTIONS
 
-def translate(model, input_txt: str):
+def marian_translate(model, input_txt: str):
     """
     Traduit un texte donné en utilisant HappyTextToText.
     """
@@ -33,3 +58,46 @@ def save(path, content):
     """
     with open(path, "w", encoding="utf8") as file:
         file.write(str(content))
+
+
+def module_deepl(model: str, lang_src: str, lang_tgt: str, text_src: str):
+    print(f"{model=}")
+    
+    auth_key = config.api_key
+    translator = deepl.Translator(auth_key)
+    outputs = translator.translate_text(text_src, source_lang=LANG_DATABASE[lang_src].upper(), target_lang=LANG_DATABASE[lang_tgt].upper())
+    text_tgt = outputs.text
+    print(f"{text_tgt=}")
+
+    score_QE = score(model_QE, text_src, text_tgt)
+    score_QE = int(round(float(score_QE), 2) * 100)
+    print(f"{score_QE=}")
+
+    return text_tgt, score_QE
+
+
+def module_google(model: str, lang_src: str, lang_tgt: str, text_src: str):
+    print(f"{model=}")
+    
+    text_tgt = GoogleTranslator(source=LANG_DATABASE[lang_src], target=LANG_DATABASE[lang_tgt]).translate(text=text_src)
+    print(f"{text_tgt=}")
+
+    score_QE = score(model_QE, text_src, text_tgt)
+    score_QE = int(round(float(score_QE), 2) * 100)
+    print(f"{score_QE=}")
+
+    return text_tgt, score_QE
+
+
+def module_marian(model: str, lang_src: str, lang_tgt: str, text_src: str):
+    model = f"{MODEL_DATABASE[model]}-{LANG_DATABASE[lang_src]}-{LANG_DATABASE[lang_tgt]}"
+    print(f"{model=}")
+
+    text_tgt, timer_t = marian_translate(model, text_src)
+    print(f"{text_tgt=}")
+
+    score_QE = score(model_QE, text_src, text_tgt)
+    score_QE = int(round(float(score_QE), 2) * 100)
+    print(f"{score_QE=}")
+
+    return text_tgt, score_QE
