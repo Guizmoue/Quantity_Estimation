@@ -65,7 +65,11 @@ def module_deepl(model: str, lang_src: str, lang_tgt: str, text_src: str):
     
     auth_key = config.api_key
     translator = deepl.Translator(auth_key)
-    outputs = translator.translate_text(text_src, source_lang=LANG_DATABASE[lang_src].upper(), target_lang=LANG_DATABASE[lang_tgt].upper())
+
+    if lang_tgt == "english":
+        outputs = translator.translate_text(text_src, source_lang=LANG_DATABASE[lang_src].upper(), target_lang="EN-GB")
+    else:
+        outputs = translator.translate_text(text_src, source_lang=LANG_DATABASE[lang_src].upper(), target_lang=LANG_DATABASE[lang_tgt].upper())
     text_tgt = outputs.text
     print(f"{text_tgt=}")
 
